@@ -18,7 +18,7 @@ public class TestUtil
     {
         assertTrue(Util.getIndexOfFirstOperatorRight("3-4/5") == 1);
         assertTrue(Util.getIndexOfFirstOperatorRight("3.5 - 4 / 5.5") == 4);
-        assertTrue(Util.getIndexOfFirstOperatorRight("5") == 1);
+        assertTrue(Util.getIndexOfFirstOperatorRight("5") == -1);
     }
 
     @Test
