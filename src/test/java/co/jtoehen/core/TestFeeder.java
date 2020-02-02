@@ -2,73 +2,37 @@ package co.jtoehen.core;
 
 import org.junit.Test;
 
-import java.util.LinkedList;
-
 public class TestFeeder
 {
     @Test
     public void TestBase()
     {
-        Feeder.calculate("1 + 1");
+        assert(Feeder.calculate("1 + 1") == 2.0);
+        assert(Feeder.calculate("2 * 2") == 4.0);
+        assert(Feeder.calculate("6 / 2") == 3.0);
+        assert(Feeder.calculate("11 + 23") == 34.0);
+        assert(Feeder.calculate("11.1 + 23") == 34.1);
+        assert(Feeder.calculate("21.1 - 13.9") == 7.2);
     }
 
     @Test
     public void TestMultipleOperation()
     {
-        Feeder.calculate("1 + 1 * 3");
+        assert(Feeder.calculate("1 + 1 * 3") == 4.0);
+        assert(Feeder.calculate("1 + 2 + 3") == 6.0);
     }
 
     @Test
     public void TestSingleBracket()
     {
-        Feeder.calculate("( 11.5 + 15.4 ) + 10.1");
+        assert(Feeder.calculate("( 11.5 + 15.4 ) + 10.1") == 37.0);
+        assert(Feeder.calculate("23 - ( 29.3 - 12.5 )") == 6.2);
     }
 
     @Test
     public void TestMultipleBrackets()
     {
-        Feeder.calculate("10 - ( 2 + 3 * ( 7 - 5 ) )");
-    }
-
-    @Test
-    public void TestPrioritizeOperation01()
-    {
-        String input = "1 + 1 * 3";
-        LinkedList<String> output;
-
-        output = Feeder.prioritizeOperation(input);
-
-        for(String base: output)
-        {
-            System.out.println(">>" + base);
-        }
-    }
-
-    @Test
-    public void TestPrioritizeOperation02()
-    {
-        String input = "1 + 2 * 3 - 4 / 5";
-        LinkedList<String> output;
-
-        output = Feeder.prioritizeOperation(input);
-
-        for(String base: output)
-        {
-            System.out.println(">>" + base);
-        }
-    }
-
-    @Test
-    public void TestPrioritizeOperation03()
-    {
-        String input = "7 - 5";
-        LinkedList<String> output;
-
-        output = Feeder.prioritizeOperation(input);
-
-        for(String base: output)
-        {
-            System.out.println(">>" + base);
-        }
+        assert(Feeder.calculate("10 - ( 2 + 3 * ( 7 - 5 ) )") == 2.0);
+//        assert(Feeder.calculate("10 - 8 + ( ( 2 + 3 ) * ( 7 - 5 ) )") == 2.0);
     }
 }

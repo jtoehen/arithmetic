@@ -1,57 +1,64 @@
 package co.jtoehen.core;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 
 public class Feeder
 {
-    private static List<String> operators = new ArrayList<String>();
-
-    private final char multiply = '*';
-
-
     public static double calculate(String sum)
     {
-        System.out.println("raw input : " + sum);
+        System.out.println("Raw input : " + sum);
 
         Double result = 0.0;
         LinkedList<String> output = new LinkedList<>();
+        ArrayList<Integer[]> leftBrackets = new ArrayList<>();
+        ArrayList<Integer> rightBrackets = new ArrayList<>();
+        HashMap<Integer, Integer[]> bracketGroups = new HashMap<>();
+
+        extractBrackets(sum, leftBrackets, rightBrackets);
+
+        bracketGroups = groupBrackets(leftBrackets,rightBrackets);
 
         // if string contains brackets, break it down
         deBracket(sum, 0, sum.length()-1, output);
 
+//        for(String base: output)
+//        {
+//            System.out.println(">> [" + base + "]");
+//        }
+
         for(String base: output)
         {
-            System.out.println(">>" + base);
-            LinkedList<String> operation = new LinkedList<>();
-            operation = prioritizeOperation(base);
-            for(String suboperation : operation)
+            String cleanBase = base.trim();
+            if(cleanBase.split(" ").length % 2 == 0)
             {
-                System.out.println(">>>> " + suboperation);
-
-                if(Util.validateBinaryOperand(suboperation))
-                    result = executeArithmetic(suboperation);
-                else if(Util.validateLeftOperand(suboperation))
+                if(Util.validateLeftOperand(base))
                 {
-                    result = executeArithmetic(suboperation + result);
+                    System.out.print("Operation : " + base + result);
+                    result = AdditionOperator.processAddition(MultiplicationOperator.processMultiplication(base + result));
+                    System.out.println(" = " + result);
                 }
-                else if(Util.validateRightOperand(suboperation))
+                else if(Util.validateRightOperand(base))
                 {
-                    result = executeArithmetic(result + suboperation);
+                    System.out.print("Operation : " + result + base);
+                    result = AdditionOperator.processAddition(MultiplicationOperator.processMultiplication(result + base));
+                    System.out.println(" = " + result);
                 }
+            }
+            else
+            {
+                result = AdditionOperator.processAddition(MultiplicationOperator.processMultiplication(cleanBase));
+                System.out.println("Operation : " + cleanBase + " = " + result);
             }
         }
 
         System.out.println("Result : " + result);
 
-        return Double.valueOf(1);
+        return result;
     }
 
     public static LinkedList<String> deBracket(String input, int i, int j, LinkedList<String> output)
     {
-        System.out.println("deBracket input : " + input);
+//        System.out.println("deBracket input : " + input);
 
         if(input.contains("(") || input.contains(")"))
         {
@@ -77,119 +84,86 @@ public class Feeder
         }
     }
 
-    public static LinkedList<String> prioritizeOperation(String input)
+    public static LinkedList<String> deBracket02(String input, HashMap<Integer, Integer[]> bracketGroups, LinkedList<String> output)
     {
-        LinkedList<String> output = new LinkedList<>();
-        System.out.println("prioritize input : [" + input + "]");
+        System.out.println("deBracket input : " + input);
 
-        int plusIndex = input.indexOf("+");
-        int minusIndex = input.indexOf("-");
-        int multiplyIndex = input.indexOf("*");
-        int divideIndex = input.indexOf("/");
-        int borderIndex;
-
-        TreeSet<Integer> set = new TreeSet<>();
-
-        if(multiplyIndex != -1)
+        if(input.contains("("))
         {
-            int left = Util.getIndexOfFirstOperatorLeft(input.substring(0, multiplyIndex));
-            int right = Util.getIndexOfFirstOperatorRight(input.substring(multiplyIndex+1, input.length()));
-            if(right == -1)
-                right = input.length();
+            int start = input.indexOf("(");
+            Integer[] coord = bracketGroups.get(start);
+            int firstDigit = Util.getIndexOfFirstDigit(input);
 
-            System.out.println(input.substring(left+1, right));
-            output.add(input.substring(left+1, right));
-        }
-        if(divideIndex != -1)
-        {
-//            System.out.println("left " + input.substring(0, divideIndex));
-            int left = Util.getIndexOfFirstOperatorLeft(input.substring(0, divideIndex));
-//            System.out.println("right " + input.substring(divideIndex+1, input.length()));
-            int right = Util.getIndexOfFirstOperatorRight(input.substring(divideIndex+1, input.length()));
-
-            System.out.println(input.substring(left+1, right + divideIndex + 1));
-            output.add(input.substring(left+1, right + divideIndex + 1));
-        }
-        if(plusIndex != -1)
-        {
-            String leftSubString = input.substring(0, plusIndex);
-//            System.out.println("left " + leftSubString);
-            int left = Util.getIndexOfFirstOperatorLeft(leftSubString);
-//            System.out.println("right " + input.substring(plusIndex+1, input.length()));
-            String rightSubString = input.substring(plusIndex+1, input.length());
-//            System.out.println("righ " + rightSubString);
-            int right = Util.getIndexOfFirstOperatorRight(rightSubString);
-            if(right == -1)
-                right = input.length();
-//            System.out.println(input.substring(left, right));
-            output.addLast(input.substring(left, right));
-        }
-        if(minusIndex != -1)
-        {
-            String leftSubString = input.substring(0, minusIndex);
-//            System.out.println("left " + leftSubString);
-            int left = Util.getIndexOfFirstOperatorLeft(leftSubString);
-//            System.out.println(left + " [" + leftSubString + "] " + leftSubString.charAt(left));
-            if(leftSubString.charAt(left) == '*' || leftSubString.charAt(left) == '/')
-                left = minusIndex;
-
-            String rightSubString = input.substring(minusIndex+1, input.length());
-//            System.out.println("righ " + rightSubString);
-            int right = Util.getIndexOfFirstOperatorRight(rightSubString);
-//            System.out.println(right + " [" + rightSubString + "] ");
-//            System.out.println(rightSubString.charAt(right));
-            if(right == -1)
+            if(start < firstDigit)
             {
-                right = input.length();
+                output.push(input.substring(coord[1], input.length()));
             }
             else
             {
-                if(rightSubString.charAt(right) == '*' || rightSubString.charAt(right) == '/')
-                    right = minusIndex+1;
+                output.push(input.substring(0, start));
             }
 
-//            System.out.println(input.substring(left, right));
-            output.addLast(input.substring(left, right));
-        }
-
-        return output;
-    }
-
-    public static double executeArithmetic(String input)
-    {
-        System.out.println("Operation : " + input);
-
-        if(input.contains("*"))
-        {
-            String operandLeft = input.substring(0, input.indexOf("*"));
-            String operandRight = input.substring(input.indexOf("*")+1, input.length());
-
-            return ArithmeticBaseOperator.multiply(Double.valueOf(operandLeft),Double.valueOf(operandRight));
-        }
-        else if(input.contains("/"))
-        {
-            String operandLeft = input.substring(0, input.indexOf("/"));
-            String operandRight = input.substring(input.indexOf("/")+1, input.length());
-
-            return ArithmeticBaseOperator.divide(Double.valueOf(operandLeft),Double.valueOf(operandRight));
-        }
-        else if(input.contains("+"))
-        {
-            String operandLeft = input.substring(0, input.indexOf("+"));
-            String operandRight = input.substring(input.indexOf("+")+1, input.length());
-
-            return ArithmeticBaseOperator.plus(Double.valueOf(operandLeft),Double.valueOf(operandRight));
-        }
-        else if(input.contains("-"))
-        {
-            String operandLeft = input.substring(0, input.indexOf("-"));
-            String operandRight = input.substring(input.indexOf("-")+1, input.length());
-
-            return ArithmeticBaseOperator.minus(Double.valueOf(operandLeft),Double.valueOf(operandRight));
+            return deBracket02(input.substring(start+1, coord[1]), bracketGroups, output);
         }
         else
         {
-            return 0;
+            output.push(input);
+            return output;
         }
     }
+
+    public static void extractBrackets(String input, ArrayList<Integer[]> leftBrackets, ArrayList<Integer> rightBrackets)
+    {
+        input = input.trim();
+        String[] raw = input.split(" ");
+        int i = 0;
+        int ind = -1;
+        while(i < raw.length)
+        {
+            ind++;
+
+            if(raw[i].equalsIgnoreCase("("))
+            {
+                leftBrackets.add(new Integer[]{ind,i});
+            }
+
+            if(raw[i].equalsIgnoreCase(")"))
+            {
+                rightBrackets.add(i);
+            }
+
+            ind=ind+raw[i].length();
+            i++;
+        }
+    }
+
+    public static HashMap<Integer, Integer[]> groupBrackets(ArrayList<Integer[]> leftBrackets, ArrayList<Integer> rightBrackets)
+    {
+        HashMap<Integer, Integer[]> bracketGroup = new HashMap<>();
+        int i = leftBrackets.size() - 1;
+        int j;
+        while(i >= 0)
+        {
+            Integer[] leftInd = leftBrackets.get(i);
+            j = 0;
+
+            while(j < rightBrackets.size())
+            {
+                int rightInd = rightBrackets.get(j);
+
+                if(leftInd[1] < rightInd)
+                {
+                    bracketGroup.put(leftInd[0], new Integer[]{leftInd[1], rightInd});
+                    leftBrackets.remove(i);
+                    rightBrackets.remove(j);
+                    break;
+                }
+                j++;
+            }
+            i--;
+        }
+
+        return bracketGroup;
+    }
+
 }
