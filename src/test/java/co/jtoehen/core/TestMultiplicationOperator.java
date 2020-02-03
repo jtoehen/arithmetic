@@ -1,5 +1,6 @@
 package co.jtoehen.core;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -45,6 +46,7 @@ public class TestMultiplicationOperator
         }
     }
 
+    @Ignore
     @Test
     public void TestPrioritizeOperation04()
     {
